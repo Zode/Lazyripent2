@@ -1,0 +1,62 @@
+name: CI-CD
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0
+
+      - name: Run tests
+        run: dotnet test Lazyripent2.Tests/Lazyripent2.Tests.csproj
+
+      - name: Cleanup
+        run: |
+          mkdir -p Release
+          rm -f Release/linux.7z
+          rm -f Release/windows.7z
+          rm -f Release/lazyripent
+          rm -f Release/lazyripent.exe
+
+      - name: Linux Build
+        run: |
+          dotnet publish Lazyripent2/Lazyripent2.csproj --artifacts-path Build/LinuxArtifacts/ -o Build/Linux -c Release -r linux-x64 -v q
+          if [ -f Build/Linux/Lazyripent2 ]; then
+            mv Build/Linux/Lazyripent2 Release/lazyripent
+            7z a Release/linux.7z Release/lazyripent -y -bso0
+            7z rn Release/linux.7z Release/lazyripent lazyripent -y -bso0
+          else
+            echo "Linux build failed"
+            exit 1
+          fi
+
+      - name: Windows Build
+        run: |
+          dotnet publish Lazyripent2/Lazyripent2.csproj --artifacts-path Build/WindowsArtifacts/ -o Build/Windows -c Release -r win-x64 -v q
+          if [ -f Build/Windows/Lazyripent2.exe ]; then
+            mv Build/Windows/Lazyripent2.exe Release/lazyripent.exe
+            7z a Release/windows.7z Release/lazyripent.exe -y -bso0
+            7z rn Release/windows.7z Release/lazyripent.exe lazyripent.exe -y -bso0
+          else
+            echo "Windows build failed"
+            exit 1
+          fi
+
+      - name: Upload Release
+        uses: xresloader/upload-to-github-release@v1.6.0
+        with:
+            file: "Release/windows.7z;Release/linux.7z"
+            token: ${{ secrets.TOKEN }}
+            default_release_name: Lazy Ripent ${{ github.ref_name }}
+            tag_name: ${{ github.ref_name }}
+            draft: false
