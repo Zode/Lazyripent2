@@ -20,6 +20,14 @@ jobs:
       - name: Run tests
         run: dotnet test Lazyripent2.Tests/Lazyripent2.Tests.csproj
 
+      - name: Cleanup
+        run: |
+          mkdir -p Release
+          rm -f Release/linux.7z
+          rm -f Release/windows.7z
+          rm -f Release/lazyripent
+          rm -f Release/lazyripent.exe
+
       - name: Linux Build
         run: |
           dotnet publish Lazyripent2/Lazyripent2.csproj --artifacts-path Build/LinuxArtifacts/ -o Build/Linux -c Release -r linux-x64 -v q
