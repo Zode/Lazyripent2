@@ -1,0 +1,27 @@
+name: Test Lazyripent
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0
+
+      - name: Run tests
+        run: dotnet test Lazyripent2.Tests/Lazyripent2.Tests.csproj
+
+      - name: Cleanup
+        run: |
+          mkdir -p Release
+          rm -f Release/lazyripent
+          rm -f Release/lazyripent.exe
