@@ -23,7 +23,5 @@ jobs:
       - name: Cleanup
         run: |
           mkdir -p Release
-          rm -f Release/linux.7z
-          rm -f Release/windows.7z
           rm -f Release/lazyripent
           rm -f Release/lazyripent.exe
