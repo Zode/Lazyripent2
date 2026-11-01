@@ -231,6 +231,19 @@ public class LexerScanner
 			Advance();
 		}
 
+		//multi_manager hack: if there is a hashtag, we treat this as a string instead of a number.
+		if(Peek() == '#' && IsAlphaNumeric(PeekNext()))
+		{
+			while(!IsAtEnd())
+			{
+				Advance();
+			}
+
+			string value = Source[(_startCaretIndex + 1)..(_currentCaretIndex - 1)];
+			AddToken(TokenType.String, value);
+			return;
+		}
+
 		//check if fractional
 		if(Peek() == '.' && IsDigit(PeekNext()))
 		{

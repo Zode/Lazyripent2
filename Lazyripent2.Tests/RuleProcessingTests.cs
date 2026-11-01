@@ -1039,4 +1039,49 @@ public class RuleProcessingTests
 			Assert.That(entities_map_c[0].GetValue("target"), Is.EqualTo("aaaa"));
 		});
 	}
+
+	[Test]
+	public void MultiManager_States()
+	{
+		MapFile mapFile = new();
+		mapFile.DeserializeFromMemory(@"
+		{
+			""classname"" ""multi_manager""
+			""test1"" ""2""
+			""test2"" ""2.0""
+			""test3"" ""2#test""
+			""test4"" ""2.0#test""
+			""test5"" ""2""
+		}
+		");
+
+		RuleFile ruleFile = new();
+		ruleFile.DeserializeFromMemory(@"
+		{
+			match ""classname"" ""multi_manager""
+			replace ""test5"" ""2#test""
+			new ""test6#0"" ""1#test""
+		}");
+
+		List<Entity> entities = ruleFile.ApplyRules("", mapFile.GetEntities());
+		
+		Assert.Multiple(() =>
+		{
+			Assert.That(entities, Has.Count.EqualTo(1));
+			Assert.That(entities[0].KeyValues.ContainsKey("classname"), Is.EqualTo(true));
+			Assert.That(entities[0].KeyValues.ContainsKey("test1"), Is.EqualTo(true));
+			Assert.That(entities[0].KeyValues.ContainsKey("test2"), Is.EqualTo(true));
+			Assert.That(entities[0].KeyValues.ContainsKey("test3"), Is.EqualTo(true));
+			Assert.That(entities[0].KeyValues.ContainsKey("test4"), Is.EqualTo(true));
+			Assert.That(entities[0].KeyValues.ContainsKey("test5"), Is.EqualTo(true));
+			Assert.That(entities[0].KeyValues.ContainsKey("test6#0"), Is.EqualTo(true));
+			Assert.That(entities[0].GetValue("classname"), Is.EqualTo("multi_manager"));
+			Assert.That(entities[0].GetValue("test1"), Is.EqualTo("2"));
+			Assert.That(entities[0].GetValue("test2"), Is.EqualTo("2.0"));
+			Assert.That(entities[0].GetValue("test3"), Is.EqualTo("2#test"));
+			Assert.That(entities[0].GetValue("test4"), Is.EqualTo("2.0#test"));
+			Assert.That(entities[0].GetValue("test5"), Is.EqualTo("2#test"));
+			Assert.That(entities[0].GetValue("test6#0"), Is.EqualTo("1#test"));
+		});
+	}
 }
