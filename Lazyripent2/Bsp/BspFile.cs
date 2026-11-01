@@ -291,7 +291,13 @@ public class BspFile : IParseableFile
 			sb.AppendLine("}");
 		}
 
-		_lumps[(int)LumpType.Entities].Data = UTF8Encoding.UTF8.GetBytes(sb.ToString());
+		byte[] data = Encoding.UTF8.GetBytes(sb.ToString());
+		//need to add null terminator, for C#'s UTF8.GetBytes doesn't add this.
+		//  https://github.com/ValveSoftware/halflife/issues/1895
+		Array.Resize(ref data, data.Length + 1);
+		data[^1] = 0x00;
+		
+		_lumps[(int)LumpType.Entities].Data = data;
 		_lumps[(int)LumpType.Entities].ByteLength = _lumps[(int)LumpType.Entities].Data.Length;
 		int length = _lumps[(int)LumpType.Entities].ByteLength;
 
