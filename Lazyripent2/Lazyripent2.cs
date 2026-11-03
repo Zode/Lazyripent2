@@ -14,7 +14,7 @@ public class Program
 
     public static int Main(string[] args)
     {
-        Console.WriteLine("Lazyripent 2.2.0");
+        Console.WriteLine("Lazyripent 2.3.0");
         try
         {
             Options.Bind([

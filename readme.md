@@ -64,6 +64,7 @@ In some situations where the health key does not exist, the program will error o
 The addition of `have key` makes this rule block find all entities with the key `classname` of value `monster_scientist` which also have a key `health`.
 
 Both of these keywords have a negated counterpart `dont-match` and `dont-have`, which will select entities that dont match the given key value combo, or dont have a given key.
+Additionally there is a `match-bit` and `dont-match-bit`, which will do the same but with bitfields.
 
 Note: normally if your keys and values only contain letters, dashes (in the middle for strings, in the beginning for numerics), or underscores you are not required to surround it in quotes, however if you wish to use any sort of special character, whitespace, or variables you will need to surround it in quotes.
 
@@ -78,6 +79,7 @@ map my_awesome_map
 ```
 This keyword can take multiple maps separated by whitespace.
 
+### Bitfields
 Sometimes you may need to adjust spawnflags (bitflag fields) without replacing the entire value, that is to say you can clear or set bits without affecting the rest. This will require some level of understanding of how bitfields or spawnflags in goldsrc work.
 
 Bit-set and bit-clear both take in a special type of value called bit-values as indicated by `b` followed by zeros or ones with optional underscores for readability. These values are binary, and are read from right to left, rightmost being `1`, and leftmost being `32768`, with a total of `65535` when all bits are set to one.
@@ -105,6 +107,24 @@ And as you would guess:
 ```
 This rule block would set the flags "Wait till seen" and "Monster clip" from `spawnflags`
 
+Additionally you can now selectively "and" out and flip flags:
+```
+{
+	match classname monster_scientist
+	bit-and spawnflags b110
+}
+```
+This makes the bitfield value act more like a mask, and will keep any bit (set or not) on the key as long as it has a corresponding `1` here. Any spot with `0` is discarded and unset.
+
+```
+{
+	match classname monster_scientist
+	bit-flip spawnflags b1
+}
+```
+This also makes the bitfield value act like a mask, and will flip the bit on or off where the mask has a `1`.
+
+### Arithmetic
 Also another new addition to Lazyripent2 is the ability to do basic arithmetic inside rule blocks:
 ```
 {
@@ -131,6 +151,7 @@ Currently multiplication and division are applied to all components of the vecto
 
 Rule blocks are executed from top to bottom, so you can abuse this to do more slightly involved operations if necessary.
 
+### Key referencing
 The way you refer to entity's existing keys has changed also:
 ```
 {
@@ -175,6 +196,8 @@ map name ...
 {
 	match key value
 	dont-match key value
+	match-bit key bN...N (where N is either 0 or 1)
+	dont-match-bit key bN...N (where N is either 0 or 1)
 	have key
 	dont-have key
 	
@@ -184,6 +207,8 @@ map name ...
 	rename key key
 	bit-set key bN...N (where N is either 0 or 1)
 	bit-clear key bN...N (where N is either 0 or 1)
+	bit-and key bN...N (where N is either 0 or 1)
+	bit-flip key bN...N (where N is either 0 or 1)
 	add key value
 	sub key value
 	mult key value

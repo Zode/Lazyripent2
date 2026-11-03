@@ -72,6 +72,20 @@ public class RuleAction(RuleBlock ruleBlock, RuleActionType Type, string? Key = 
 				entity.SetKeyValue(Key, SolveForBitwise(entity.GetValue(Key), RuleActionBitwiseMode.Clear));
 				break;
 
+			case RuleActionType.BitAnd:
+				EnsureKeyIsNotNull();
+				EnsureValueIsNotNull();
+				EnsureEntityHasKey(entity, Key);
+				entity.SetKeyValue(Key, SolveForBitwise(entity.GetValue(Key), RuleActionBitwiseMode.And));
+				break;
+
+			case RuleActionType.BitFlip:
+				EnsureKeyIsNotNull();
+				EnsureValueIsNotNull();
+				EnsureEntityHasKey(entity, Key);
+				entity.SetKeyValue(Key, SolveForBitwise(entity.GetValue(Key), RuleActionBitwiseMode.Flip));
+				break;
+
 			//key key operations
 			case RuleActionType.Rename:
 				EnsureKeyIsNotNull();
@@ -302,6 +316,7 @@ public class RuleAction(RuleBlock ruleBlock, RuleActionType Type, string? Key = 
 		string stripValue = Value[1..];
 		stripValue = stripValue.Replace("_", string.Empty);
 		int indexOffset = 16 - stripValue.Length;
+		int mask = 0;
 		for(int i = 0; i < stripValue.Length; i++)
 		{
 			if(stripValue[i] != '0' && stripValue[i] != '1')
@@ -309,29 +324,41 @@ public class RuleAction(RuleBlock ruleBlock, RuleActionType Type, string? Key = 
 				throw new RuleBlockException($"RuleActionType {Type} Value is not a bit value in rule block starting on line {_ruleBlock.Line}");
 			}
 
+			if(stripValue[i] == '0')
+			{
+				continue;
+			}
+
 			switch(bitwiseMode)
 			{
+				case RuleActionBitwiseMode.And:
+				case RuleActionBitwiseMode.Flip:
+					mask |= 0x8000 >> (i + indexOffset);
+					break;
+				
 				case RuleActionBitwiseMode.Set:
-					if(stripValue[i] == '0')
-					{
-						continue;
-					}
-
 					existingValueAsInt |= 0x8000 >> (i + indexOffset);
 					break;
 
 				case RuleActionBitwiseMode.Clear:
-					if(stripValue[i] == '0')
-					{
-						continue;
-					}
-
 					existingValueAsInt &= ~(0x8000 >> (i + indexOffset));
 					break;
 
 				default:
 					throw new NotImplementedException($"Unsupported RuleActionBitwiseMode {bitwiseMode}");
 			}
+		}
+
+		switch(bitwiseMode)
+		{
+			case RuleActionBitwiseMode.And:
+				existingValueAsInt &= mask;
+				break;
+
+			case RuleActionBitwiseMode.Flip:
+				existingValueAsInt = (existingValueAsInt & ~mask) | (~(existingValueAsInt & mask) & mask);
+				break;
+				
 		}
 
 		return existingValueAsInt.ToString();

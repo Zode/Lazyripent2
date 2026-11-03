@@ -6,6 +6,8 @@ public enum RuleActionType
 	[RuleKeyword("new", 2)] New,
 	[RuleKeyword("bit-set", 2)] BitSet,
 	[RuleKeyword("bit-clear", 2)] BitClear,
+	[RuleKeyword("bit-and", 2)] BitAnd,
+	[RuleKeyword("bit-flip", 2)] BitFlip,
 	[RuleKeyword("rename", 2)] Rename,
 	[RuleKeyword("store", 2)] Store,
  	[RuleKeyword("remove", 1)] Remove,

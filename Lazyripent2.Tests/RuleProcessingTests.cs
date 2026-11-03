@@ -91,6 +91,90 @@ public class RuleProcessingTests
 	}
 
 	[Test]
+	public void Basic_MatchBit_Replace()
+	{
+		MapFile mapFile = new();
+		mapFile.DeserializeFromMemory(@"
+		{
+			""classname"" ""test_target""
+			""target"" ""aaaa"" 
+			""target2"" ""1""
+		}
+		{
+			""classname"" ""test_target""
+			""target"" ""aaaa"" 
+			""target2"" ""3""
+		}
+		{
+			""classname"" ""test_ignore""
+			""target"" ""aaaa""
+			""target2"" ""2""
+		}
+		");
+
+		RuleFile ruleFile = new();
+		ruleFile.DeserializeFromMemory(@"
+		{
+			match-bit target2 b1
+			replace target bbbb
+		}");
+
+		List<Entity> entities = ruleFile.ApplyRules("", mapFile.GetEntities());
+		
+		Assert.Multiple(() =>
+		{
+			Assert.That(entities[0].GetValue("target"), Is.EqualTo("bbbb"));
+			Assert.That(entities[0].GetValue("target2"), Is.EqualTo("1"));
+			Assert.That(entities[1].GetValue("target"), Is.EqualTo("bbbb"));
+			Assert.That(entities[1].GetValue("target2"), Is.EqualTo("3"));
+			Assert.That(entities[2].GetValue("target"), Is.EqualTo("aaaa"));
+			Assert.That(entities[2].GetValue("target2"), Is.EqualTo("2"));
+		});
+	}
+
+	[Test]
+	public void Basic_DontMatchBit_Replace()
+	{
+		MapFile mapFile = new();
+		mapFile.DeserializeFromMemory(@"
+		{
+			""classname"" ""test_target""
+			""target"" ""aaaa"" 
+			""target2"" ""1""
+		}
+		{
+			""classname"" ""test_target""
+			""target"" ""aaaa"" 
+			""target2"" ""3""
+		}
+		{
+			""classname"" ""test_ignore""
+			""target"" ""aaaa""
+			""target2"" ""2""
+		}
+		");
+
+		RuleFile ruleFile = new();
+		ruleFile.DeserializeFromMemory(@"
+		{
+			dont-match-bit target2 b1
+			replace target bbbb
+		}");
+
+		List<Entity> entities = ruleFile.ApplyRules("", mapFile.GetEntities());
+		
+		Assert.Multiple(() =>
+		{
+			Assert.That(entities[0].GetValue("target"), Is.EqualTo("aaaa"));
+			Assert.That(entities[0].GetValue("target2"), Is.EqualTo("1"));
+			Assert.That(entities[1].GetValue("target"), Is.EqualTo("aaaa"));
+			Assert.That(entities[1].GetValue("target2"), Is.EqualTo("3"));
+			Assert.That(entities[2].GetValue("target"), Is.EqualTo("bbbb"));
+			Assert.That(entities[2].GetValue("target2"), Is.EqualTo("2"));
+		});
+	}
+
+	[Test]
 	public void Basic_Have_Replace()
 	{
 		MapFile mapFile = new();
@@ -474,6 +558,50 @@ public class RuleProcessingTests
 		List<Entity> entities = ruleFile.ApplyRules("", mapFile.GetEntities());
 		
 		Assert.That(entities[0].GetValue("bitfield"), Is.EqualTo("0"));
+	}
+
+	[Test]
+	public void BitAnd()
+	{
+		MapFile mapFile = new();
+		mapFile.DeserializeFromMemory(@"
+		{
+			""classname"" ""test_target""
+			""bitfield"" ""6""
+		}
+		");
+
+		RuleFile ruleFile = new();
+		ruleFile.DeserializeFromMemory(@"
+		{
+			match classname test_target
+			bit-and bitfield b11
+		}");
+
+		List<Entity> entities = ruleFile.ApplyRules("", mapFile.GetEntities());
+		Assert.That(entities[0].GetValue("bitfield"), Is.EqualTo("2"));
+	}
+
+	[Test]
+	public void BitFlip()
+	{
+		MapFile mapFile = new();
+		mapFile.DeserializeFromMemory(@"
+		{
+			""classname"" ""test_target""
+			""bitfield"" ""4""
+		}
+		");
+
+		RuleFile ruleFile = new();
+		ruleFile.DeserializeFromMemory(@"
+		{
+			match classname test_target
+			bit-flip bitfield b11
+		}");
+
+		List<Entity> entities = ruleFile.ApplyRules("", mapFile.GetEntities());
+		Assert.That(entities[0].GetValue("bitfield"), Is.EqualTo("7"));
 	}
 
 	[Test]

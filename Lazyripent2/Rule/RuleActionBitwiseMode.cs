@@ -4,4 +4,6 @@ public enum RuleActionBitwiseMode
 {
 	Clear,
 	Set,
+	And,
+	Flip,
 }

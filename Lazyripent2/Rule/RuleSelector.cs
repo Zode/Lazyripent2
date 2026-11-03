@@ -57,6 +57,46 @@ public class RuleSelector(RuleBlock RuleBlock, RuleSelectorType Type, string Key
 
 				break;
 
+			case RuleSelectorType.MatchBit:
+				EnsureValueIsNotNull();
+
+				foreach(Entity entity in entities)
+				{
+					if(!entity.KeyValues.ContainsKey(Key))
+					{
+						entity.Discarded = true;
+						continue;
+					}
+
+					if(!SolveForBitwise(entity.GetValue(Key)))
+					{
+						entity.Discarded = true;
+						continue;
+					}
+				}
+
+				break;
+
+			case RuleSelectorType.DontMatchBit:
+				EnsureValueIsNotNull();
+
+				foreach(Entity entity in entities)
+				{
+					if(!entity.KeyValues.ContainsKey(Key))
+					{
+						entity.Discarded = true;
+						continue;
+					}
+
+					if(SolveForBitwise(entity.GetValue(Key)))
+					{
+						entity.Discarded = true;
+						continue;
+					}
+				}
+
+				break;
+
 			case RuleSelectorType.Have:
 				foreach(Entity entity in entities)
 				{
@@ -85,6 +125,46 @@ public class RuleSelector(RuleBlock RuleBlock, RuleSelectorType Type, string Key
 				throw new RuleBlockException($"Unsupported RuleSelectorType {Type} in rule block starting on line {_ruleBlock.Line}");
 		}
 		#pragma warning restore 8604
+	}
+
+	/// <summary>
+	/// </summary>
+	/// <param name="existingValue"></param>
+	/// <returns></returns>
+	/// <exception cref="RuleBlockException"></exception>
+	/// <exception cref="NotImplementedException"></exception>
+	private bool SolveForBitwise(string existingValue)
+	{
+		if(!Value!.StartsWith('b'))
+		{
+			throw new RuleBlockException($"RuleSelector {Type} Value is not a bit value in rule block starting on line {_ruleBlock.Line}");
+		}
+
+		if(!int.TryParse(existingValue, out int existingValueAsInt))
+		{
+			throw new RuleBlockException($"RuleSelector {Type} Target value is not a bitfield in rule block starting on line {_ruleBlock.Line}");
+		}
+
+		string stripValue = Value[1..];
+		stripValue = stripValue.Replace("_", string.Empty);
+		int indexOffset = 16 - stripValue.Length;
+		int mask = 0;
+		for(int i = 0; i < stripValue.Length; i++)
+		{
+			if(stripValue[i] != '0' && stripValue[i] != '1')
+			{
+				throw new RuleBlockException($"RuleSelector {Type} Value is not a bit value in rule block starting on line {_ruleBlock.Line}");
+			}
+
+			if(stripValue[i] == '0')
+			{
+				continue;
+			}
+
+			mask |= 0x8000 >> (i + indexOffset);
+		}
+
+		return (existingValueAsInt & mask) > 0;
 	}
 
 	/// <summary>
