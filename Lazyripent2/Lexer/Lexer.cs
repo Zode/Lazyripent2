@@ -249,7 +249,7 @@ public class LexerScanner
 		{
 			//consume the .
 			Advance();
-			while(IsDigit(Peek()))
+			while(IsDigit(Peek()) || Peek() == 'e' || Peek() == '-')
 			{
 				Advance();
 			}
